@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Imperium Gatto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <div class="page-shell">
+        <header class="top-bar">
+            <div class="location">Aberto agora</div>
+            <div class="status">Avaliação 4.9 ★ • R$ 0,00</div>
+        </header>
+
+        <section class="hero" style="background-image: url('{{ url_for('static', filename='background.jpeg') }}');">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <div class="hero-title">Imperium <span>Gatto</span></div>
+                <p class="hero-subtitle">Café premium e receitas felinas para um momento especial.</p>
+            </div>
+        </section>
+
+        <section class="menu-bar">
+            <nav>
+                <a href="#">Início</a>
+                <a href="#produtos">Cardápio</a>
+                <a href="#">Sobre</a>
+                <a href="#">Contato</a>
+            </nav>
+        </section>
+
+        <section class="search-panel">
+            <input type="search" placeholder="Buscar no cardápio" />
+        </section>
+
+        <main id="produtos" class="product-grid">
+            {% for product in products %}
+            <a class="product-card" href="{{ url_for('product_page', product_id=product.id) }}">
+                <div class="product-info">
+                    <h3>{{ product.title }}</h3>
+                    <p>{{ product.description }}</p>
+                </div>
+                <div class="product-price">{{ product.price }}</div>
+            </a>
+            {% endfor %}
+        </main>
+
+        <footer class="footer-card">
+            <div>
+                <h3>Imperium Gatto</h3>
+                <p>A mistura perfeita entre café especial e charme felino.</p>
+            </div>
+            <a class="footer-button" href="{{ url_for('product_page', product_id='combo-carinho') }}">Peça agora</a>
+        </footer>
+    </div>
+</body>
+</html>

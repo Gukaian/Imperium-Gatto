@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ product.title }} - Imperium Gatto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <div class="page-shell product-page-shell">
+        <header class="top-bar">
+            <div class="location">Imperium Gatto</div>
+            <div class="status"><a href="{{ url_for('index') }}">Voltar ao cardápio</a></div>
+        </header>
+
+        <main class="product-detail">
+            <div class="product-detail-card">
+                <h1>{{ product.title }}</h1>
+                <p>{{ product.description }}</p>
+                <p class="product-detail-price">{{ product.price }}</p>
+                <a class="footer-button" href="{{ url_for('index') }}">Voltar ao cardápio</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
