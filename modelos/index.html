@@ -35,13 +35,13 @@
         </section>
 
         <main id="produtos" class="product-grid">
-            {% for product in products %}
-            <a class="product-card" href="{{ url_for('product_page', product_id=product.id) }}">
+            {% for produto in produtos %}
+            <a class="product-card" href="{{ url_for('pagina_produto', produto_id=produto.id) }}">
                 <div class="product-info">
-                    <h3>{{ product.title }}</h3>
-                    <p>{{ product.description }}</p>
+                    <h3>{{ produto.titulo }}</h3>
+                    <p>{{ produto.descricao }}</p>
                 </div>
-                <div class="product-price">{{ product.price }}</div>
+                <div class="product-price">{{ produto.preco }}</div>
             </a>
             {% endfor %}
         </main>
@@ -51,7 +51,7 @@
                 <h3>Imperium Gatto</h3>
                 <p>A mistura perfeita entre café especial e charme felino.</p>
             </div>
-            <a class="footer-button" href="{{ url_for('product_page', product_id='combo-carinho') }}">Peça agora</a>
+            <a class="footer-button" href="{{ url_for('pagina_produto', produto_id='combo-carinho') }}">Peça agora</a>
         </footer>
     </div>
 </body>
