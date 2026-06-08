@@ -24,27 +24,57 @@
         <section class="menu-bar">
             <nav>
                 <a href="#">Início</a>
-                <a href="#produtos">Cardápio</a>
+                <a href="#café">Café</a>
+                <a href="#comidas">Comidas</a>
+                <a href="#combos">Combos</a>
                 <a href="#">Sobre</a>
-                <a href="#">Contato</a>
+                <a href="#contato">Contato</a>
+                <button class="cart-button" onclick="toggleCart()">
+                    🛒 Carrinho <span id="cart-count">(0)</span>
+                </button>
             </nav>
         </section>
 
         <section class="search-panel">
-            <input type="search" placeholder="Buscar no cardápio" />
+            <input type="search" id="search-input" placeholder="Buscar no cardápio" />
         </section>
 
-        <main id="produtos" class="product-grid">
-            {% for produto in produtos %}
-            <a class="product-card" href="{{ url_for('pagina_produto', produto_id=produto.id) }}">
-                <div class="product-info">
-                    <h3>{{ produto.titulo }}</h3>
-                    <p>{{ produto.descricao }}</p>
+        <main id="produtos">
+            {% set categorias = produtos | map(attribute='categoria') | unique | list %}
+            {% for categoria in categorias %}
+            <section class="category-section" id="{{ categoria.lower() }}">
+                <h2 class="category-title">{{ categoria }}</h2>
+                <div class="product-grid">
+                    {% for produto in produtos %}
+                    {% if produto.categoria == categoria %}
+                    <div class="product-card" data-title="{{ produto.titulo.lower() }}">
+                        <a href="{{ url_for('pagina_produto', produto_id=produto.id) }}">
+                            <div class="product-info">
+                                <h3>{{ produto.titulo }}</h3>
+                                <p>{{ produto.descricao }}</p>
+                            </div>
+                            <div class="product-price">{{ produto.preco }}</div>
+                        </a>
+                        <button class="add-to-cart-button" onclick="addToCart('{{ produto.id }}', '{{ produto.titulo }}', '{{ produto.preco }}')">
+                            Adicionar ao Carrinho
+                        </button>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
-                <div class="product-price">{{ produto.preco }}</div>
-            </a>
+            </section>
             {% endfor %}
         </main>
+
+        <section class="contact-section" id="contato">
+            <h2 class="category-title">Contato</h2>
+            <div class="contact-list">
+                <a href="mailto:Guilherme@gmail.com" class="contact-item">Guilherme@gmail.com</a>
+                <a href="mailto:Gustavo@gmail.com" class="contact-item">Gustavo@gmail.com</a>
+                <a href="mailto:Lisboa@gmail.com" class="contact-item">Lisboa@gmail.com</a>
+                <a href="mailto:Nicolas@gmail.com" class="contact-item">Nicolas@gmail.com</a>
+            </div>
+        </section>
 
         <footer class="footer-card">
             <div>
@@ -54,5 +84,145 @@
             <a class="footer-button" href="{{ url_for('pagina_produto', produto_id='combo-carinho') }}">Peça agora</a>
         </footer>
     </div>
+
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-content">
+            <div class="cart-header">
+                <h2>🛒 Carrinho de Compras</h2>
+                <button class="close-cart" onclick="toggleCart()">✕</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <p class="empty-cart">Seu carrinho está vazio</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <strong>Total:</strong> <span id="cart-total">R$ 0,00</span>
+                </div>
+                <button class="checkout-button" onclick="checkout()">Finalizar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+
+        // filtro de busca
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', function() {
+            const texto = this.value.toLowerCase();
+            const cards = document.querySelectorAll('.product-card');
+            const secoes = document.querySelectorAll('.category-section');
+
+            cards.forEach(card => {
+                const nome = card.getAttribute('data-title');
+                if (nome.indexOf(texto) > -1) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // esconde seção vazia
+            secoes.forEach(sec => {
+                const todosCards = sec.querySelectorAll('.product-card');
+                let temVisivel = false;
+                todosCards.forEach(c => {
+                    if (c.style.display !== 'none') temVisivel = true;
+                });
+                sec.style.display = temVisivel ? 'block' : 'none';
+            });
+        });
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('active');
+        }
+
+        function addToCart(id, title, price) {
+            const jaExiste = cart.find(item => item.id === id);
+            if (jaExiste) {
+                jaExiste.quantity++;
+            } else {
+                cart.push({ id, title, price, quantity: 1 });
+            }
+            updateCart();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCart();
+        }
+
+        function updateQuantity(id, change) {
+            const item = cart.find(item => item.id === id);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(id);
+                } else {
+                    updateCart();
+                }
+            }
+        }
+
+        function parsePrice(priceStr) {
+            return parseFloat(priceStr.replace('R$ ', '').replace(',', '.'));
+        }
+
+        function formatPrice(priceNum) {
+            return 'R$ ' + priceNum.toFixed(2).replace('.', ',');
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
+
+            const totalItens = cart.reduce((acc, item) => acc + item.quantity, 0);
+            cartCount.textContent = `(${totalItens})`;
+
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p class="empty-cart">Seu carrinho está vazio</p>';
+                cartTotal.textContent = 'R$ 0,00';
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+
+            cart.forEach(item => {
+                const totalItem = parsePrice(item.price) * item.quantity;
+                total += totalItem;
+                html += `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <h4>${item.title}</h4>
+                            <p>${item.price}</p>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
+                            <button class="remove-btn" onclick="removeFromCart('${item.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            cartItems.innerHTML = html;
+            cartTotal.textContent = formatPrice(total);
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('Seu carrinho está vazio!');
+                return;
+            }
+            alert('Pedido finalizado com sucesso! 🎉');
+            cart = [];
+            updateCart();
+            toggleCart();
+        }
+    </script>
 </body>
 </html>

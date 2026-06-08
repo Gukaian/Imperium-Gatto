@@ -18,9 +18,131 @@
                 <h1>{{ produto.titulo }}</h1>
                 <p>{{ produto.descricao }}</p>
                 <p class="product-detail-price">{{ produto.preco }}</p>
-                <a class="footer-button" href="{{ url_for('pagina_inicial') }}">Voltar ao cardápio</a>
+                <button class="footer-button" onclick="addToCart('{{ produto.id }}', '{{ produto.titulo }}', '{{ produto.preco }}')">Adicionar ao Carrinho</button>
+                <a class="footer-button" href="{{ url_for('pagina_inicial') }}" style="background: var(--text); margin-top: 12px;">Voltar ao cardápio</a>
             </div>
         </main>
     </div>
+
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-content">
+            <div class="cart-header">
+                <h2>🛒 Carrinho de Compras</h2>
+                <button class="close-cart" onclick="toggleCart()">✕</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <p class="empty-cart">Seu carrinho está vazio</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <strong>Total:</strong> <span id="cart-total">R$ 0,00</span>
+                </div>
+                <button class="checkout-button" onclick="checkout()">Finalizar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('active');
+        }
+
+        function addToCart(id, title, price) {
+            const jaExiste = cart.find(item => item.id === id);
+            if (jaExiste) {
+                jaExiste.quantity++;
+            } else {
+                cart.push({ id, title, price, quantity: 1 });
+            }
+            saveCart();
+            updateCart();
+            alert('Produto adicionado ao carrinho!');
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            saveCart();
+            updateCart();
+        }
+
+        function updateQuantity(id, change) {
+            const item = cart.find(item => item.id === id);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(id);
+                } else {
+                    saveCart();
+                    updateCart();
+                }
+            }
+        }
+
+        function parsePrice(priceStr) {
+            return parseFloat(priceStr.replace('R$ ', '').replace(',', '.').replace('A partir de ', ''));
+        }
+
+        function formatPrice(priceNum) {
+            return 'R$ ' + priceNum.toFixed(2).replace('.', ',');
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p class="empty-cart">Seu carrinho está vazio</p>';
+                cartTotal.textContent = 'R$ 0,00';
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+
+            cart.forEach(item => {
+                const totalItem = parsePrice(item.price) * item.quantity;
+                total += totalItem;
+                html += `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <h4>${item.title}</h4>
+                            <p>${item.price}</p>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
+                            <button class="remove-btn" onclick="removeFromCart('${item.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            cartItems.innerHTML = html;
+            cartTotal.textContent = formatPrice(total);
+        }
+
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('Seu carrinho está vazio!');
+                return;
+            }
+            alert('Pedido finalizado com sucesso! 🎉');
+            cart = [];
+            saveCart();
+            updateCart();
+            toggleCart();
+        }
+
+        // Initialize cart on page load
+        updateCart();
+    </script>
 </body>
 </html>
